@@ -1,0 +1,25 @@
+{
+  "name": "ticketbari-online-ticket-booking",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "server": "npm --prefix server run dev",
+    "client": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "build:server": "npm --prefix server run check",
+    "preview": "vite preview --host 127.0.0.1"
+  },
+  "dependencies": {
+    "@stripe/react-stripe-js": "^6.6.0",
+    "@stripe/stripe-js": "^9.8.0",
+    "@vitejs/plugin-react": "latest",
+    "better-auth": "^1.6.20",
+    "lucide-react": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "typescript": "latest",
+    "vite": "latest"
+  }
+}
