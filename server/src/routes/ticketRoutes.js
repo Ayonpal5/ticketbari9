@@ -7,23 +7,49 @@ const router = express.Router();
 
 router.get('/', async (req, res, next) => {
   try {
-    const { search = '', type = 'All', sort = 'recent', page = 1, limit = 6, advertised } = req.query;
+    const {
+      search = '',
+      from,
+      to,
+      type = 'All',
+      sort = 'recent',
+      page = 1,
+      limit = 6,
+      advertised,
+    } = req.query;
+
     const fraudVendors = await User.find({ fraud: true }).distinct('_id');
     const query = { status: 'approved', vendor: { $nin: fraudVendors } };
+
     if (type !== 'All') query.type = type;
     if (advertised === 'true') query.advertised = true;
-    if (search) query.$or = [
-      { from: new RegExp(search, 'i') },
-      { to: new RegExp(search, 'i') },
-      { title: new RegExp(search, 'i') },
-    ];
+
+    // Backward compatible:
+    // - If `search` is provided (old behavior), search from/to/title.
+    // - If `from`/`to` are provided (new behavior), filter by those fields.
+    if (from || to) {
+      if (from) query.from = new RegExp(String(from), 'i');
+      if (to) query.to = new RegExp(String(to), 'i');
+    } else if (search) {
+      query.$or = [
+        { from: new RegExp(search, 'i') },
+        { to: new RegExp(search, 'i') },
+        { title: new RegExp(search, 'i') },
+      ];
+    }
+
     const sortMap = { low: { price: 1 }, high: { price: -1 }, recent: { createdAt: -1 } };
     const pageNumber = Math.max(Number(page), 1);
     const pageSize = Math.min(Math.max(Number(limit), 1), 9);
+
     const [tickets, total] = await Promise.all([
-      Ticket.find(query).sort(sortMap[sort] || sortMap.recent).skip((pageNumber - 1) * pageSize).limit(pageSize),
+      Ticket.find(query)
+        .sort(sortMap[sort] || sortMap.recent)
+        .skip((pageNumber - 1) * pageSize)
+        .limit(pageSize),
       Ticket.countDocuments(query),
     ]);
+
     res.json({ tickets, total, page: pageNumber, pages: Math.ceil(total / pageSize) || 1 });
   } catch (error) {
     next(error);
@@ -70,6 +96,10 @@ router.get('/:id', protect, async (req, res, next) => {
   try {
     const ticket = await Ticket.findById(req.params.id);
     if (!ticket) return res.status(404).json({ message: 'Ticket not found' });
+    const ownsTicket = String(ticket.vendor) === String(req.user._id);
+    if (ticket.status !== 'approved' && req.user.role !== 'admin' && !ownsTicket) {
+      return res.status(404).json({ message: 'Approved ticket not found' });
+    }
     res.json({ ticket });
   } catch (error) {
     next(error);
