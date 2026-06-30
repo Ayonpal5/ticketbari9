@@ -12,6 +12,7 @@ router.post('/create-intent', protect, async (req, res, next) => {
     if (!booking) return res.status(404).json({ message: 'Booking not found' });
     if (String(booking.user) !== String(req.user._id)) return res.status(403).json({ message: 'You can pay only your own booking' });
     if (booking.status !== 'accepted') return res.status(400).json({ message: 'Only accepted bookings can be paid' });
+    if (new Date(booking.ticket.departure) <= new Date()) return res.status(400).json({ message: 'Payment is closed for departed tickets' });
     if (!stripe) {
       return res.json({
         clientSecret: `demo_secret_${booking._id}`,

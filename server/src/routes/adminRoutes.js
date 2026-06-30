@@ -33,7 +33,7 @@ router.patch('/users/:id/role', async (req, res, next) => {
 
 router.patch('/users/:id/fraud', async (req, res, next) => {
   try {
-    const user = await User.findByIdAndUpdate(req.params.id, { fraud: true, role: 'user' }, { new: true });
+    const user = await User.findByIdAndUpdate(req.params.id, { fraud: true }, { new: true });
     if (!user) return res.status(404).json({ message: 'User not found' });
     await Ticket.updateMany({ vendor: user._id }, { advertised: false });
     res.json({ user: publicUser(user), message: 'Vendor marked as fraud and tickets hidden' });
