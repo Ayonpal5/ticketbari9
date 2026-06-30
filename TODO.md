@@ -1,4 +1,4 @@
-# TicketBari - Completion Notes
+# TicketBari - - - Completion Notes
 
 ## Main Requirements
 - Main layout, sticky navbar, responsive content area, and footer are implemented.
